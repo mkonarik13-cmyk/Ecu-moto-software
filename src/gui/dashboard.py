@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                                QGroupBox, QLabel, QProgressBar, QPushButton,
                                QFrame, QGridLayout)
-from PySide6.QtCore import Qt, QTimer, pyqtSignal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QPalette, QColor
 from .scanner_dialog import ScannerDialog
 
@@ -9,7 +9,7 @@ class DashboardWidget(QWidget):
     """Enhanced dashboard with real 28M4G parameters and hardware status."""
 
     # Signal for status updates
-    status_updated = pyqtSignal(str)
+    status_updated = Signal(str)
 
     def __init__(self, logger, protocol=None, kwp_client=None):
         super().__init__()

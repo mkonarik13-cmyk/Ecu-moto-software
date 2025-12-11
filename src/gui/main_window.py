@@ -180,6 +180,10 @@ class MainWindow(QMainWindow):
             if not self.kwp_client.connect():
                 QMessageBox.critical(self, "Error", "Not connected to ECU!")
                 return
-                
+
         dialog = ScannerDialog(self.kwp_client, self)
         dialog.exec()
+
+    def set_status(self, message):
+        """Set status message for the main window."""
+        self.setWindowTitle(f"Moto ECU Tuner (Magneti Marelli 28M4G) - {message}")
