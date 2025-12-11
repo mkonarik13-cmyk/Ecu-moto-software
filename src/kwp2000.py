@@ -13,7 +13,8 @@ class KWP2000Client:
         self.ser = None
         self.target_addr = 0x01
         self.source_addr = 0xF1
-        self.simulation_mode = False
+        # Auto-detect simulation mode for obvious simulation ports
+        self.simulation_mode = port in ['SIMULATION_PORT', 'TEST_PORT', 'MOCK_PORT']
 
         # Error recovery and monitoring
         self.communication_stats = {
@@ -143,6 +144,11 @@ class KWP2000Client:
         Reads battery voltage using correct 28M4G PID.
         Battery voltage is typically PID 0x05 on 28M4G ECUs.
         """
+        if self.simulation_mode:
+            # Return realistic simulation voltage
+            import random
+            return random.uniform(12.4, 13.2)  # Realistic battery voltage range
+
         try:
             # Use correct battery voltage PID for 28M4G
             response = self.send_request(0x21, [0x05])
@@ -192,14 +198,22 @@ class KWP2000Client:
                 valid_pids = [0x04, 0x05, 0x0C, 0x0D, 0x0F, 0x10, 0x11, 0x14, 0x1A, 0x1B, 0x20, 0x24, 0x33]
                 if pid in valid_pids:
                     import random
-                    if pid in [0x05]:  # Battery voltage
-                        return [0x61, pid, int(180 / 0.07)]  # ~12.6V
+                    if pid == 0x05:  # Battery voltage - return raw value for 0.07 conversion
+                        voltage_raw = int(random.uniform(177, 189))  # 12.4-13.2V range in raw
+                        self.communication_stats['successful_requests'] += 1
+                        return [0x61, pid, voltage_raw]
                     elif pid == 0x0C:  # RPM
+                        self.communication_stats['successful_requests'] += 1
                         return [0x61, pid, random.randint(40, 200), random.randint(0, 255)]
-                    elif pid in [0x04, 0x0F]:  # Temperature
-                        return [0x61, pid, random.randint(80, 120)]  # 40-80°C
+                    elif pid in [0x04, 0x0F]:  # Temperature - return raw value for (raw - 40) conversion
+                        temp_raw = random.randint(80, 120)  # 40-80°C range in raw
+                        self.communication_stats['successful_requests'] += 1
+                        return [0x61, pid, temp_raw]
                     else:
+                        self.communication_stats['successful_requests'] += 1
                         return [0x61, pid, random.randint(0, 255)]
+                # Unsupported PID - count as failed request
+                self.communication_stats['failed_requests'] += 1
                 return None # Simulate "Not Supported" for others
 
             self.communication_stats['successful_requests'] += 1
