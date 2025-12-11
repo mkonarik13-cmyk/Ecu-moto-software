@@ -111,15 +111,28 @@ class MainWindow(QMainWindow):
     def read_firmware(self):
         fname, _ = QFileDialog.getSaveFileName(self, "Save Firmware", "", "Binary Files (*.bin)")
         if fname:
-            progress = QProgressDialog("Reading Firmware...", "Cancel", 0, 100, self)
+            # Ensure connection first
+            if not self.kwp_client.ser and not self.kwp_client.simulation_mode:
+                if not self.kwp_client.connect():
+                    QMessageBox.critical(self, "Error", "Not connected to ECU!")
+                    return
+
+            progress = QProgressDialog("Reading Firmware from ECU...", "Cancel", 0, 100, self)
             progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
             
             def update_progress(val):
                 progress.setValue(int(val))
+                if progress.wasCanceled():
+                    return False
+                return True
                 
             try:
-                self.fw_manager.download_firmware(fname, update_progress)
-                QMessageBox.information(self, "Success", "Firmware downloaded successfully!")
+                success = self.fw_manager.download_firmware(fname, update_progress)
+                if success:
+                    QMessageBox.information(self, "Success", f"Firmware downloaded successfully!\nSaved to: {fname}")
+                else:
+                    QMessageBox.critical(self, "Error", "Download failed or was cancelled.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Download failed: {e}")
 

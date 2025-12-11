@@ -17,31 +17,35 @@ class FirmwareManager:
         Includes retry logic for reliability.
         """
         print(f"Starting firmware download to {filename}...")
-        with open(filename, "wb") as f:
-            current_addr = self.flash_start
-            end_addr = self.flash_start + self.flash_size
-            
-            while current_addr < end_addr:
-                # Calculate chunk size (don't go past end)
-                size = min(self.chunk_size, end_addr - current_addr)
+        try:
+            with open(filename, "wb") as f:
+                current_addr = self.flash_start
+                end_addr = self.flash_start + self.flash_size
                 
-                # Read from ECU with Retry
-                data = self._read_chunk_with_retry(current_addr, size)
-                
-                if data:
-                    f.write(data)
-                    current_addr += len(data)
+                while current_addr < end_addr:
+                    # Calculate chunk size (don't go past end)
+                    size = min(self.chunk_size, end_addr - current_addr)
                     
-                    # Update progress
-                    if progress_callback:
-                        percent = ((current_addr - self.flash_start) / self.flash_size) * 100
-                        progress_callback(percent)
-                else:
-                    print(f"Critical Error reading at {hex(current_addr)}. Aborting.")
-                    return False
+                    # Read from ECU with Retry
+                    data = self._read_chunk_with_retry(current_addr, size)
                     
-        print("Download complete.")
-        return True
+                    if data:
+                        f.write(data)
+                        current_addr += len(data)
+                        
+                        # Update progress
+                        if progress_callback:
+                            percent = ((current_addr - self.flash_start) / self.flash_size) * 100
+                            progress_callback(percent)
+                    else:
+                        print(f"Critical Error reading at {hex(current_addr)}. Aborting.")
+                        return False
+                        
+            print(f"Download complete. Saved to {filename}")
+            return True
+        except Exception as e:
+            print(f"File error: {e}")
+            return False
 
     def _read_chunk_with_retry(self, address, size, retries=3):
         for i in range(retries):
