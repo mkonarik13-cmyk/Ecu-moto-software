@@ -1,58 +1,31 @@
 import time
-import serial
 import threading
-import random
 import pandas as pd
 from typing import List, Dict, Optional
 from .ecu_definition import EcuProtocol, EcuParameter
-
-class MockSerial:
-    """Simulates a serial connection for testing without an ECU."""
-    def __init__(self):
-        self.is_open = True
-        
-    def write(self, data):
-        pass  # Simulate sending request
-        
-    def read(self, size):
-        # Return random bytes to simulate ECU response
-        return bytes([random.randint(0, 255) for _ in range(size)])
-        
-    def close(self):
-        self.is_open = False
+from .kwp2000 import KWP2000Client
 
 class EcuLogger:
-    def __init__(self, protocol: EcuProtocol, port: str = "COM1", use_mock: bool = False):
+    def __init__(self, protocol: EcuProtocol, kwp_client: KWP2000Client):
         self.protocol = protocol
-        self.port = port
-        self.use_mock = use_mock
-        self.serial: Optional[serial.Serial] = None
+        self.kwp_client = kwp_client
         self.is_logging = False
         self.log_data: List[Dict] = []
         self.selected_params: List[str] = []
         self._thread: Optional[threading.Thread] = None
 
     def connect(self):
-        """Establishes connection to the ECU."""
-        if self.use_mock:
-            print(f"Connecting to MOCK ECU on {self.port}...")
-            self.serial = MockSerial()
-        else:
-            print(f"Connecting to ECU on {self.port} at {self.protocol.baud_rate} baud...")
-            try:
-                self.serial = serial.Serial(
-                    self.port, 
-                    self.protocol.baud_rate, 
-                    timeout=0.1
-                )
-            except serial.SerialException as e:
-                print(f"Connection failed: {e}")
-                raise
+        """Establishes connection to the ECU via KWP Client."""
+        # Connection is handled by KWP client externally or here
+        if not self.kwp_client.ser and not self.kwp_client.simulation_mode:
+            return self.kwp_client.connect()
+        return True
 
     def start_logging(self, param_ids: List[str], interval: float = 0.1):
         """Starts the logging loop in a separate thread."""
-        if not self.serial:
-            raise Exception("Not connected to ECU")
+        # Check if connected (either real or simulation)
+        if not self.kwp_client.ser and not self.kwp_client.simulation_mode:
+             raise Exception("Not connected to ECU")
             
         self.selected_params = param_ids
         self.is_logging = True
@@ -80,28 +53,38 @@ class EcuLogger:
             
             row = {"timestamp": timestamp}
             
-            # In a real K-Line/CAN scenario, you might construct a single request packet
-            # containing all PIDs, or request them sequentially.
-            # Here we simulate sequential requests for simplicity.
-            
-            for pid in self.selected_params:
-                param = self.protocol.get_parameter(pid)
+            for pid_name in self.selected_params:
+                param = self.protocol.get_parameter(pid_name)
                 if not param:
                     continue
                 
-                # 1. Send Request (Implementation depends on specific protocol, e.g., KWP2000, ISO9141)
-                # self.serial.write(build_request(param.id))
-                
-                # 2. Read Response
-                raw_bytes = self.serial.read(param.byte_length)
-                
-                if len(raw_bytes) == param.byte_length:
-                    # Convert bytes to integer
-                    raw_val = int.from_bytes(raw_bytes, byteorder='big')
-                    # Apply conversion formula
-                    phys_val = param.conversion_func(raw_val)
-                    row[param.name] = phys_val
-                else:
+                # Map parameter ID (e.g., "RPM") to KWP2000 Local ID (e.g., 0x0C)
+                # For now, we'll assume the ID in definition is the Local ID if it's hex-like
+                # Or we need a mapping. Let's assume param.id is the Local ID for KWP2000
+                try:
+                    # If param.id is "RPM", we need a mapping.
+                    # For this fix, let's assume we use a hardcoded mapping or update definition later.
+                    # Using a simple mapping for demo:
+                    local_id = 0x00
+                    if param.id == "RPM": local_id = 0x0C
+                    elif param.id == "TPS": local_id = 0x11
+                    elif param.id == "ECT": local_id = 0x04
+                    
+                    # Send KWP2000 Request (Service 0x21)
+                    response = self.kwp_client.send_request(0x21, [local_id])
+                    
+                    if response and response[0] == 0x61:
+                        raw_bytes = bytes(response[2:]) # Skip Service(61) + PID
+                        if raw_bytes:
+                            raw_val = int.from_bytes(raw_bytes, byteorder='big')
+                            phys_val = param.conversion_func(raw_val)
+                            row[param.name] = phys_val
+                        else:
+                            row[param.name] = None
+                    else:
+                        row[param.name] = None
+                except Exception as e:
+                    print(f"Error logging {param.name}: {e}")
                     row[param.name] = None
 
             self.log_data.append(row)

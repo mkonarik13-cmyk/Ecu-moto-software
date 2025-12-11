@@ -9,11 +9,11 @@ from ..kwp2000 import KWP2000Client
 from ..firmware_manager import FirmwareManager
 
 class MainWindow(QMainWindow):
-    def __init__(self, protocol, logger):
+    def __init__(self, protocol, logger, kwp_client):
         super().__init__()
         self.protocol = protocol
         self.logger = logger
-        self.kwp_client = KWP2000Client("TEST_PORT") # Placeholder port
+        self.kwp_client = kwp_client
         self.fw_manager = FirmwareManager(self.kwp_client)
         
         self.setWindowTitle("Moto ECU Tuner (Magneti Marelli 28M4G)")
