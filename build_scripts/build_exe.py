@@ -88,42 +88,38 @@ VSVersionInfo(
 
 def create_spec_file():
     """Create PyInstaller spec file with custom configuration"""
-    spec_content = f'''# -*- mode: python ; coding: utf-8 -*-
+    spec_file = project_root / "build_scripts" / "ecu_tuner.spec"
+
+    # Use the existing spec file instead of generating a new one
+    existing_spec = project_root / "build_scripts" / "ecu_tuner.spec"
+
+    if existing_spec.exists():
+        print(f"Using existing spec file: {existing_spec}")
+        return str(existing_spec)
+    else:
+        print("No existing spec file found. Using minimal configuration.")
+
+        # Create minimal spec file
+        spec_content = """# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=['{project_root}'],
+    pathex=[],
     binaries=[],
-    datas=[
-        ('src/gui/resources', 'resources'),
-        ('build_scripts/version_info.txt', '.'),
-    ],
+    datas=[],
     hiddenimports=[
         'PySide6.QtCore',
         'PySide6.QtGui',
-        'PySide6.QtWidgets',
-        'matplotlib.backends.backend_qt5agg',
-        'numpy',
-        'Crypto',
-        'colorlog',
-        'tenacity'
+        'PySide6.QtWidgets'
     ],
     hookspath=[],
-    hooksconfig={{}},
     runtime_hooks=[],
     excludes=[
         'tkinter',
-        'unittest',
-        'test',
-        'doctest',
-        'pdb',
-        'distutils'
+        'unittest'
     ],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False
 )
 
@@ -132,33 +128,22 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='ECU_Tuner_28M4G',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    version='build_scripts/version_info.txt',
-    icon='src/gui/resources/icons/app.ico' if Path('src/gui/resources/icons/app.ico').exists() else None
+    disable_windowed_traceback=False
 )
-'''
+"""
 
-    spec_file = project_root / "build_scripts" / "ecu_tuner.spec"
-    with open(spec_file, 'w') as f:
-        f.write(spec_content)
+        with open(spec_file, 'w', encoding='utf-8') as f:
+            f.write(spec_content)
 
-    return str(spec_file)
+        return str(spec_file)
 
 
 def build_executable():
@@ -168,20 +153,42 @@ def build_executable():
     # Change to project directory
     os.chdir(project_root)
 
-    # Create spec file
-    spec_file = create_spec_file()
-    print(f"Created spec file: {spec_file}")
-
-    # Build arguments
+    # Build using direct PyInstaller command (simpler and more reliable)
     build_args = [
-        str(spec_file),
-        '--clean',
-        '--noconfirm'
+        'main.py',
+        '--name=ECU_Tuner_28M4G',
+        '--windowed',  # No console window
+        '--onefile',   # Single executable file
+        '--clean',     # Clean previous builds
+        '--noconfirm', # Don't ask for confirmation
+        '--hidden-import=PySide6.QtCore',
+        '--hidden-import=PySide6.QtGui',
+        '--hidden-import=PySide6.QtWidgets',
+        '--hidden-import=matplotlib.backends.backend_qt5agg',
+        '--hidden-import=numpy',
+        '--exclude-module=tkinter',
+        '--exclude-module=unittest'
     ]
+
+    # Add version info if available
+    version_info_path = project_root / "build_scripts" / "version_info.txt"
+    if version_info_path.exists():
+        build_args.extend(['--version-file', str(version_info_path)])
+
+    # Add icon if available
+    icon_path = project_root / "src" / "gui" / "resources" / "icons" / "app.ico"
+    if icon_path.exists():
+        build_args.extend(['--icon', str(icon_path)])
+
+    # Add data files if resources directory exists
+    resources_path = project_root / "src" / "gui" / "resources"
+    if resources_path.exists():
+        build_args.extend(['--add-data', f'{resources_path}{os.pathsep}resources'])
 
     # Run PyInstaller
     try:
-        print("Running PyInstaller...")
+        print("Running PyInstaller with command:")
+        print(" ".join(['pyinstaller'] + build_args))
         PyInstaller.__main__.run(build_args)
 
         # Check if executable was created
