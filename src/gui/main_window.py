@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QMenuBar, QStatusBar, QToolBar, QSplitter, QFrame,
     QMessageBox, QProgressDialog, QApplication
 )
-from PySide6.QtCore import Qt, QTimer, Signal, QThread, pyqtSignal
+from PySide6.QtCore import Qt, QTimer, Signal, QThread
 from PySide6.QtGui import QAction, QIcon, QPalette, QColor
 
 # Import custom modules
@@ -34,10 +34,10 @@ class MainWindow(QMainWindow):
     """
 
     # Signals for inter-component communication
-    ecu_connected = pyqtSignal(object)  # ECUInfo
-    ecu_disconnected = pyqtSignal()
-    connection_status_changed = pyqtSignal(str)
-    operation_progress = pyqtSignal(str, int)  # operation, percentage
+    ecu_connected = Signal(object)  # ECUInfo
+    ecu_disconnected = Signal()
+    connection_status_changed = Signal(str)
+    operation_progress = Signal(str, int)  # operation, percentage
 
     def __init__(self):
         super().__init__()
@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
     def show_connection_dialog(self):
         """Show ECU connection dialog"""
         dialog = ConnectionDialog(self)
-        if dialog.exec_() == ConnectionDialog.Accepted:
+        if dialog.exec() == ConnectionDialog.Accepted:
             config = dialog.get_connection_config()
             if config:
                 self.connect_to_ecu(config)
@@ -581,9 +581,9 @@ class MainWindow(QMainWindow):
 class ECUConnectionWorker(QThread):
     """Worker thread for ECU connection to avoid UI freezing"""
 
-    connection_established = pyqtSignal(object)  # ECUInfo
-    connection_failed = pyqtSignal(str)  # error message
-    finished = pyqtSignal()
+    connection_established = Signal(object)  # ECUInfo
+    connection_failed = Signal(str)  # error message
+    finished = Signal()
 
     def __init__(self, ecu_connection: ECUConnection):
         super().__init__()

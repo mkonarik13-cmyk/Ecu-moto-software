@@ -24,9 +24,9 @@ from src.utils.logger import get_gui_logger
 class FlashOperationThread(QThread):
     """Worker thread for flash operations to avoid UI freezing"""
 
-    progress_updated = pyqtSignal(str, int, int, int)  # operation, percent, bytes_done, total_bytes
-    operation_completed = pyqtSignal(bool, str)  # success, message
-    log_message = pyqtSignal(str)
+    progress_updated = Signal(str, int, int, int)  # operation, percent, bytes_done, total_bytes
+    operation_completed = Signal(bool, str)  # success, message
+    log_message = Signal(str)
 
     def __init__(self, ecu_connection: ECUConnection, operation: str, file_path: str = ""):
         super().__init__()

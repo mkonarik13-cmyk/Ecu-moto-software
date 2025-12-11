@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QFrame, QProgressBar, QScrollArea,
     QGridLayout, QGraphicsOpacityEffect
 )
-from PySide6.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, QTimer, Signal, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import (
     QFont, QPalette, QColor, QPainter, QPen, QBrush, QRadialGradient,
     QPixmap, QPainterPath
@@ -181,9 +181,9 @@ class DashboardWidget(QWidget):
     """Main dashboard widget with ECU information and gauges"""
 
     # Signals
-    connect_request = pyqtSignal()
-    disconnect_request = pyqtSignal()
-    read_firmware_request = pyqtSignal()
+    connect_request = Signal()
+    disconnect_request = Signal()
+    read_firmware_request = Signal()
 
     def __init__(self):
         super().__init__()
