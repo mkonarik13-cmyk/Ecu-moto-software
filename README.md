@@ -1,14 +1,19 @@
-# Moto ECU Tuner
+# Moto ECU Tuner (Magneti Marelli 28M4G)
 
-A modern, open-source ECU tuning and logging tool inspired by RomRaider. It features a full graphical user interface for real-time data logging and map tracing.
+A professional ECU tuning tool designed for **Italjet Dragster (125/200/300)** motorcycles equipped with the **Magneti Marelli 28M4G ECU**.
 
 ## Features
 
-*   **Modern GUI**: Built with PySide6 (Qt) for a professional look and feel.
+*   **ECU Flashing**: Read and Write full firmware binaries (`.bin`) via OBDII/K-Line.
 *   **Live Dashboard**: Real-time gauges for RPM, TPS, and Temperature.
 *   **Map Tracing**: Visualizes the active cell in the fuel map while the engine is running.
 *   **Data Logging**: Records ECU parameters to CSV for analysis.
-*   **Extensible**: Easy to define new protocols and maps in Python.
+*   **Protocol Support**: Implements **KWP2000** with 28M4G-specific wake-up sequences.
+
+## Hardware Requirements
+
+*   **OBDII Interface**: A K-Line compatible OBDII adapter (e.g., VAG-COM KKL 409.1 with FTDI chip).
+*   **Adapter Cable**: 3-pin Fiat/Alfa/Lancia to OBDII adapter (for the diagnostic port on the bike).
 
 ## Installation
 
@@ -26,15 +31,21 @@ Run the application:
 python main.py
 ```
 
-### Quick Start Guide
-1.  Click **Connect** in the toolbar (simulates connection in Mock mode).
-2.  Click **Start Logging** to begin the data stream.
-3.  Switch to the **Dashboard** tab to see live gauges.
-4.  Switch to the **Map Editor** tab to see the "Map Tracing" in action (blue highlight moves as RPM/TPS change).
+### Flashing Firmware
+1.  Connect your OBDII adapter to the bike and PC.
+2.  Turn the ignition **ON** (engine off).
+3.  Click **Connect** in the app.
+4.  Click **Read Firmware** to backup your current map.
+5.  Click **Write Firmware** to upload a modified `.bin` file.
+
+### Live Tuning
+1.  Start the engine.
+2.  Click **Start Logging**.
+3.  Use the **Dashboard** and **Map Editor** tabs to monitor performance.
 
 ## Project Structure
 
-*   `src/gui/`: UI components (Dashboard, Map Editor, Main Window).
-*   `src/logger.py`: Core logging engine.
-*   `src/ecu_definition.py`: ECU parameter and map definitions.
-*   `main.py`: Application entry point.
+*   `src/kwp2000.py`: KWP2000 protocol implementation.
+*   `src/firmware_manager.py`: Logic for reading/writing flash memory.
+*   `src/gui/`: UI components (PySide6).
+*   `src/logger.py`: Live data logging engine.
