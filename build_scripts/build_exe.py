@@ -47,8 +47,7 @@ def clean_build_dirs():
 
 def create_version_info():
     """Create version info file for Windows executable"""
-    version_info_content = '''
-# Version information for Windows executable
+    version_info_content = '''# Version information for Windows executable
 VSVersionInfo(
   ffi=FixedFileInfo(
     filevers=(1, 0, 0, 0),
@@ -69,7 +68,7 @@ VSVersionInfo(
         StringStruct(u'FileDescription', u'ECU Tuner 28M4G - Italjet Dragster'),
         StringStruct(u'FileVersion', u'1.0.0.0'),
         StringStruct(u'InternalName', u'ecu_tuner_28m4g'),
-        StringStruct(u'LegalCopyright', u'Copyright © 2024'),
+        StringStruct(u'LegalCopyright', u'Copyright 2024'),
         StringStruct(u'OriginalFilename', u'ECU_Tuner_28M4G.exe'),
         StringStruct(u'ProductName', u'ECU Tuner 28M4G'),
         StringStruct(u'ProductVersion', u'1.0.0.0')])
@@ -80,7 +79,7 @@ VSVersionInfo(
 '''
 
     version_file = project_root / "build_scripts" / "version_info.txt"
-    with open(version_file, 'w') as f:
+    with open(version_file, 'w', encoding='utf-8') as f:
         f.write(version_info_content)
 
     return str(version_file)
@@ -150,10 +149,18 @@ def build_executable():
     """Build the executable using PyInstaller"""
     print("Starting PyInstaller build...")
 
+    # Check if PySide6 is installed
+    try:
+        import PySide6
+        print(f"PySide6 version: {PySide6.__version__}")
+    except ImportError:
+        print("ERROR: PySide6 is not installed! Please run: pip install -r requirements.txt")
+        return False
+
     # Change to project directory
     os.chdir(project_root)
 
-    # Build using direct PyInstaller command (simpler and more reliable)
+    # Simple build without problematic features
     build_args = [
         'main.py',
         '--name=ECU_Tuner_28M4G',
@@ -161,14 +168,24 @@ def build_executable():
         '--onefile',   # Single executable file
         '--clean',     # Clean previous builds
         '--noconfirm', # Don't ask for confirmation
-        '--hidden-import=PySide6.QtCore',
-        '--hidden-import=PySide6.QtGui',
-        '--hidden-import=PySide6.QtWidgets',
-        '--hidden-import=matplotlib.backends.backend_qt5agg',
-        '--hidden-import=numpy',
         '--exclude-module=tkinter',
-        '--exclude-module=unittest'
+        '--exclude-module=unittest',
+        '--exclude-module=test',
+        '--exclude-module=doctest',
+        '--exclude-module=pdb'
     ]
+
+    # Try to add hidden imports only if PySide6 is available
+    try:
+        import PySide6.QtCore
+        build_args.extend([
+            '--hidden-import=PySide6.QtCore',
+            '--hidden-import=PySide6.QtGui',
+            '--hidden-import=PySide6.QtWidgets'
+        ])
+        print("PySide6 modules found and added to build")
+    except ImportError:
+        print("Warning: PySide6 modules not found during build prep")
 
     # Add version info if available
     version_info_path = project_root / "build_scripts" / "version_info.txt"
@@ -185,11 +202,27 @@ def build_executable():
     if resources_path.exists():
         build_args.extend(['--add-data', f'{resources_path}{os.pathsep}resources'])
 
+    # Set environment variables for better encoding handling
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
     # Run PyInstaller
     try:
         print("Running PyInstaller with command:")
         print(" ".join(['pyinstaller'] + build_args))
-        PyInstaller.__main__.run(build_args)
+
+        # Use subprocess for better control
+        import subprocess
+        result = subprocess.run(['pyinstaller'] + build_args,
+                              capture_output=True, text=True, encoding='utf-8')
+
+        if result.returncode == 0:
+            print("PyInstaller completed successfully")
+            print("Build output:")
+            print(result.stdout)
+        else:
+            print("PyInstaller errors:")
+            print(result.stderr)
+            return False
 
         # Check if executable was created
         exe_path = project_root / "dist" / "ECU_Tuner_28M4G.exe"
