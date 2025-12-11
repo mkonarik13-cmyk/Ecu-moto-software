@@ -126,19 +126,28 @@ class MainWindow(QMainWindow):
     def write_firmware(self):
         fname, _ = QFileDialog.getOpenFileName(self, "Open Firmware", "", "Binary Files (*.bin)")
         if fname:
+            # Check Voltage First
+            voltage = self.kwp_client.get_battery_voltage()
+            if voltage < 12.0:
+                QMessageBox.critical(self, "Low Voltage", f"Battery voltage is too low ({voltage:.1f}V). Connect a charger before flashing.")
+                return
+
             reply = QMessageBox.warning(self, "Warning",
-                                      "Flashing firmware carries risks. Ensure battery is charged.\nContinue?",
+                                      f"Flashing firmware carries risks.\nBattery Voltage: {voltage:.1f}V\n\nAn automatic backup will be created before writing.\n\nContinue?",
                                       QMessageBox.Yes | QMessageBox.No)
             
             if reply == QMessageBox.Yes:
-                progress = QProgressDialog("Writing Firmware...", "Cancel", 0, 100, self)
+                progress = QProgressDialog("Writing Firmware (Backup -> Flash)...", "Cancel", 0, 100, self)
                 progress.setWindowModality(Qt.WindowModal)
                 
                 def update_progress(val):
                     progress.setValue(int(val))
                     
                 try:
-                    self.fw_manager.upload_firmware(fname, update_progress)
-                    QMessageBox.information(self, "Success", "Firmware uploaded successfully!")
+                    success = self.fw_manager.upload_firmware(fname, update_progress)
+                    if success:
+                        QMessageBox.information(self, "Success", "Firmware uploaded successfully!")
+                    else:
+                        QMessageBox.critical(self, "Error", "Upload failed. Check console for details.")
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Upload failed: {e}")

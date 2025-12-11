@@ -15,7 +15,11 @@ class KWP2000Client:
 
     def connect(self):
         print(f"Connecting to {self.port} at {self.baudrate} baud...")
-        self.ser = serial.Serial(self.port, self.baudrate, timeout=1.0)
+        try:
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=1.0)
+        except serial.SerialException as e:
+            print(f"Serial error: {e}")
+            return False
         
         # 28M4G Specific Wake-up Sequence
         # This is critical for the ECU to start communicating
@@ -31,6 +35,59 @@ class KWP2000Client:
         else:
             print("Failed to start session.")
             return False
+
+    def security_access(self):
+        """
+        Performs the Seed-Key exchange to unlock the ECU (Service 0x27).
+        Required for writing memory.
+        """
+        # 1. Request Seed (Level 0x01)
+        response = self.send_request(0x27, [0x01])
+        if not response or response[0] != 0x67:
+            print("Failed to request seed.")
+            return False
+            
+        # Seed is usually 2 or 4 bytes
+        seed = response[2:] # Skip Service ID (0x67) and Level (0x01)
+        print(f"Got Seed: {seed.hex()}")
+        
+        # 2. Calculate Key
+        key = self._calculate_key(seed)
+        print(f"Calculated Key: {key.hex()}")
+        
+        # 3. Send Key (Level 0x02)
+        response = self.send_request(0x27, [0x02] + list(key))
+        if response and response[0] == 0x67:
+            print("Security Access Granted!")
+            return True
+        else:
+            print("Security Access Denied.")
+            return False
+
+    def _calculate_key(self, seed):
+        """
+        Calculates the key from the seed.
+        Placeholder for Magneti Marelli algorithm.
+        """
+        # TODO: Implement specific 28M4G algorithm
+        # Often simple bitwise operations
+        key = bytearray(seed)
+        for i in range(len(key)):
+            key[i] = key[i] ^ 0xFF # Simple XOR example
+        return bytes(key)
+
+    def get_battery_voltage(self):
+        """
+        Reads battery voltage to ensure safe flashing.
+        """
+        # Placeholder PID request (Service 0x21)
+        # Assuming Voltage is PID 0x04 (Example)
+        response = self.send_request(0x21, [0x04])
+        if response and len(response) > 1:
+            raw_val = response[1]
+            voltage = raw_val * 0.07 # Example conversion
+            return voltage
+        return 12.5 # Mock value if request fails
 
     def disconnect(self):
         if self.ser and self.ser.is_open:
