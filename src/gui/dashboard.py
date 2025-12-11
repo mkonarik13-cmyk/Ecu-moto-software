@@ -30,11 +30,17 @@ class TachometerWidget(QWidget):
         self.current_rpm = 0
         self.max_rpm = 16000  # Typical sportbike range
         self.redline = 14000
+        self.connected = False
         self.setMinimumSize(250, 250)
 
     def set_rpm(self, rpm: int):
         """Set current RPM value"""
         self.current_rpm = max(0, min(rpm, self.max_rpm))
+        self.update()
+
+    def set_connected(self, connected: bool):
+        """Set connection status"""
+        self.connected = connected
         self.update()
 
     def paintEvent(self, event):
@@ -92,28 +98,46 @@ class TachometerWidget(QWidget):
             int(redline_start * 16), int((redline_end_rad - redline_start_rad) * 16 / 3.14159)
         )
 
-        # Draw needle
-        needle_angle = -225 + (self.current_rpm / self.max_rpm) * 270
-        needle_angle_rad = needle_angle * 3.14159 / 180
+        # Draw needle only if connected
+        if self.connected:
+            needle_angle = -225 + (self.current_rpm / self.max_rpm) * 270
+            needle_angle_rad = needle_angle * 3.14159 / 180
 
-        painter.setPen(QPen(QColor(255, 0, 0), 3))
-        painter.drawLine(
-            center_x, center_y,
-            center_x + (radius - 30) * -needle_angle_rad,
-            center_y + (radius - 30) * -needle_angle_rad
-        )
+            painter.setPen(QPen(QColor(255, 0, 0), 3))
+            painter.drawLine(
+                center_x, center_y,
+                center_x + (radius - 30) * -needle_angle_rad,
+                center_y + (radius - 30) * -needle_angle_rad
+            )
 
         # Draw center cap
         painter.setBrush(QBrush(QColor(100, 100, 100)))
         painter.setPen(QPen(QColor(150, 150, 150), 1))
         painter.drawEllipse(center_x - 8, center_y - 8, 16, 16)
 
-        # Draw current RPM text
+        # Draw status text
         painter.setPen(QPen(QColor(255, 255, 255), 1))
-        font = QFont("Arial", 14, QFont.Bold)
-        painter.setFont(font)
-        rpm_text = str(self.current_rpm)
-        painter.drawText(center_x - 25, center_y + 40, f"{rpm_text} RPM")
+        
+        if self.connected:
+            font = QFont("Arial", 14, QFont.Bold)
+            painter.setFont(font)
+            rpm_text = str(self.current_rpm)
+            # Center text calculation
+            fm = painter.fontMetrics()
+            text_width = fm.horizontalAdvance(f"{rpm_text} RPM")
+            painter.drawText(center_x - text_width // 2, center_y + 40, f"{rpm_text} RPM")
+        else:
+            font = QFont("Arial", 10, QFont.Bold)
+            painter.setFont(font)
+            text = "WAITING FOR\nCONNECTION"
+            # Draw multiline text centered
+            lines = text.split('\n')
+            y_offset = 40
+            for line in lines:
+                fm = painter.fontMetrics()
+                text_width = fm.horizontalAdvance(line)
+                painter.drawText(center_x - text_width // 2, center_y + y_offset, line)
+                y_offset += 15
 
 
 class TemperatureGauge(QWidget):
@@ -121,14 +145,20 @@ class TemperatureGauge(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.current_temp = 20.0
+        self.current_temp = 0.0
         self.max_temp = 120.0
         self.warning_temp = 100.0
+        self.connected = False
         self.setMinimumSize(150, 150)
 
     def set_temperature(self, temp: float):
         """Set current temperature"""
         self.current_temp = max(0, min(temp, self.max_temp))
+        self.update()
+
+    def set_connected(self, connected: bool):
+        """Set connection status"""
+        self.connected = connected
         self.update()
 
     def paintEvent(self, event):
@@ -152,30 +182,42 @@ class TemperatureGauge(QWidget):
         painter.drawEllipse(center_x - radius, center_y - radius, radius * 2, radius * 2)
 
         # Temperature arc
-        temp_ratio = self.current_temp / self.max_temp
-        temp_angle = int(temp_ratio * 270)
+        if self.connected:
+            temp_ratio = self.current_temp / self.max_temp
+            temp_angle = int(temp_ratio * 270)
 
-        # Choose color based on temperature
-        if self.current_temp < 80:
-            color = QColor(0, 200, 0)  # Green
-        elif self.current_temp < self.warning_temp:
-            color = QColor(255, 200, 0)  # Orange
-        else:
-            color = QColor(255, 0, 0)  # Red
+            # Choose color based on temperature
+            if self.current_temp < 80:
+                color = QColor(0, 200, 0)  # Green
+            elif self.current_temp < self.warning_temp:
+                color = QColor(255, 200, 0)  # Orange
+            else:
+                color = QColor(255, 0, 0)  # Red
 
-        painter.setPen(QPen(color, 8))
-        painter.drawArc(
-            center_x - radius + 5, center_y - radius + 5,
-            (radius - 5) * 2, (radius - 5) * 2,
-            90 * 16, -temp_angle * 16
-        )
+            painter.setPen(QPen(color, 8))
+            painter.drawArc(
+                center_x - radius + 5, center_y - radius + 5,
+                (radius - 5) * 2, (radius - 5) * 2,
+                90 * 16, -temp_angle * 16
+            )
 
         # Temperature text
         painter.setPen(QPen(QColor(255, 255, 255), 1))
-        font = QFont("Arial", 12, QFont.Bold)
-        painter.setFont(font)
-        temp_text = f"{self.current_temp:.0f}°C"
-        painter.drawText(center_x - 25, center_y + 5, temp_text)
+        
+        if self.connected:
+            font = QFont("Arial", 12, QFont.Bold)
+            painter.setFont(font)
+            temp_text = f"{self.current_temp:.0f}°C"
+            fm = painter.fontMetrics()
+            text_width = fm.horizontalAdvance(temp_text)
+            painter.drawText(center_x - text_width // 2, center_y + 5, temp_text)
+        else:
+            font = QFont("Arial", 10, QFont.Bold)
+            painter.setFont(font)
+            text = "WAITING"
+            fm = painter.fontMetrics()
+            text_width = fm.horizontalAdvance(text)
+            painter.drawText(center_x - text_width // 2, center_y + 5, text)
 
 
 class DashboardWidget(QWidget):
@@ -492,6 +534,10 @@ class DashboardWidget(QWidget):
             self.performance_combo.setEnabled(True)
             self.connect_button.setEnabled(False)
 
+            # Enable gauges
+            self.tachometer.set_connected(True)
+            self.temperature_gauge.set_connected(True)
+
             # Start simulation (for demo purposes)
             self.simulation_timer.start(2000)  # Update every 2 seconds
 
@@ -609,7 +655,9 @@ class DashboardWidget(QWidget):
     def reset_gauges(self):
         """Reset all gauges to default values"""
         self.tachometer.set_rpm(0)
-        self.temperature_gauge.set_temperature(20.0)
+        self.tachometer.set_connected(False)
+        self.temperature_gauge.set_temperature(0.0)
+        self.temperature_gauge.set_connected(False)
 
     def update_connection_details(self, port: str, baudrate: int):
         """Update connection port and baud rate display"""
