@@ -4,6 +4,7 @@ from PySide6.QtGui import QAction, QPalette, QColor
 from PySide6.QtCore import Qt
 from .dashboard import DashboardWidget
 from .map_editor import MapEditorWidget
+from .scanner_dialog import ScannerDialog
 from ..kwp2000 import KWP2000Client
 from ..firmware_manager import FirmwareManager
 
@@ -45,7 +46,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
         
         # Dashboard Tab
-        self.dashboard = DashboardWidget(self.logger)
+        # Pass kwp_client as protocol for scanning
+        self.dashboard = DashboardWidget(self.logger, self.kwp_client)
         self.tabs.addTab(self.dashboard, "Dashboard")
         
         # Map Editor Tab
@@ -84,6 +86,13 @@ class MainWindow(QMainWindow):
         write_fw_action = QAction("Write Firmware", self)
         write_fw_action.triggered.connect(self.write_firmware)
         toolbar.addAction(write_fw_action)
+        
+        toolbar.addSeparator()
+        
+        # Scan IDs
+        scan_action = QAction("Scan Live Data IDs", self)
+        scan_action.triggered.connect(self.open_scanner)
+        toolbar.addAction(scan_action)
 
     def connect_ecu(self):
         try:
@@ -164,3 +173,13 @@ class MainWindow(QMainWindow):
                         QMessageBox.critical(self, "Error", "Upload failed. Check console for details.")
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Upload failed: {e}")
+
+    def open_scanner(self):
+        # Ensure connection first
+        if not self.kwp_client.ser and not self.kwp_client.simulation_mode:
+            if not self.kwp_client.connect():
+                QMessageBox.critical(self, "Error", "Not connected to ECU!")
+                return
+                
+        dialog = ScannerDialog(self.kwp_client, self)
+        dialog.exec()

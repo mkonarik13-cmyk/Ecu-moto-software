@@ -1,12 +1,14 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
-                               QGroupBox, QLabel, QProgressBar)
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+                               QGroupBox, QLabel, QProgressBar, QPushButton)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
+from .scanner_dialog import ScannerDialog
 
 class DashboardWidget(QWidget):
-    def __init__(self, logger):
+    def __init__(self, logger, protocol=None):
         super().__init__()
         self.logger = logger
+        self.protocol = protocol # Need protocol for scanning
         self.setup_ui()
         
         # Update timer
@@ -61,7 +63,19 @@ class DashboardWidget(QWidget):
         status_layout = QVBoxLayout(status_group)
         self.status_label = QLabel("Ready")
         status_layout.addWidget(self.status_label)
+        
+        # Scan Button
+        self.scan_btn = QPushButton("Scan Live Data IDs")
+        self.scan_btn.clicked.connect(self.open_scanner)
+        status_layout.addWidget(self.scan_btn)
+        
         layout.addWidget(status_group, 1, 1)
+
+    def open_scanner(self):
+        if not self.protocol:
+            return
+        dialog = ScannerDialog(self.protocol, self)
+        dialog.exec()
 
     def update_data(self):
         data = self.logger.get_latest_data()

@@ -103,12 +103,22 @@ class KWP2000Client:
         Format: [Format, Target, Source, Length, Service, Data..., Checksum]
         """
         if self.simulation_mode:
-            time.sleep(0.01) # Simulate latency
+            time.sleep(0.005) # Simulate latency
             # Return positive response for common services
             if service_id == 0x10: return [0x50] # Start Session OK
             if service_id == 0x27: return [0x67, 0x01, 0xDE, 0xAD] # Security Access OK
             if service_id == 0x23: return [0x63] + [0xFF] * 64 # Read Memory OK (Dummy Data)
             if service_id == 0x3D: return [0x7D] # Write Memory OK
+            
+            # Simulate Live Data (Service 0x21)
+            if service_id == 0x21:
+                pid = data[0]
+                # Simulate valid PIDs
+                if pid in [0x01, 0x04, 0x0C, 0x0D, 0x11, 0x20, 0x33]:
+                    import random
+                    return [0x61, pid, random.randint(0, 255)]
+                return None # Simulate "Not Supported" for others
+                
             return [service_id + 0x40]
 
         if not self.ser:
@@ -184,3 +194,29 @@ class KWP2000Client:
         addr_bytes = list(struct.pack(">I", address))[1:]
         response = self.send_request(0x3D, addr_bytes + list(data))
         return response is not None
+
+    def scan_local_ids(self, progress_callback=None):
+        """
+        Scans for supported Local IDs (PIDs) using Service 0x21.
+        Iterates from 0x00 to 0xFF.
+        """
+        valid_ids = []
+        print("Starting Local ID Scan (0x00 - 0xFF)...")
+        
+        for pid in range(0x00, 0x100):
+            try:
+                # Service 0x21: Read Data By Local Identifier
+                response = self.send_request(0x21, [pid])
+                
+                # Check for Positive Response (0x61)
+                if response and response[0] == 0x61:
+                    raw_data = bytes(response[1:]) # Exclude Service ID
+                    print(f"Found PID: {hex(pid)} -> {raw_data.hex()}")
+                    valid_ids.append({"id": hex(pid), "raw": raw_data.hex()})
+            except Exception as e:
+                print(f"Error scanning PID {hex(pid)}: {e}")
+                
+            if progress_callback:
+                progress_callback(pid)
+                
+        return valid_ids
