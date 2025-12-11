@@ -1,13 +1,14 @@
-# Moto ECU Logger & Map Tracer
+# Moto ECU Tuner
 
-This project is a modern ECU tuning tool inspired by **RomRaider**, designed to replace older tools like TunerPro. It focuses on high-speed data logging and real-time map tracing.
+A modern, open-source ECU tuning and logging tool inspired by RomRaider. It features a full graphical user interface for real-time data logging and map tracing.
 
 ## Features
 
-*   **Real-time Data Logging**: Logs ECU parameters (RPM, TPS, Temp, etc.) via Serial/K-Line.
-*   **Map Tracing**: Visualizes exactly which cell of the fuel/ignition map is currently active while the engine is running.
-*   **CSV Export**: Automatically saves log sessions to CSV for analysis in MegaLogViewer or Excel.
-*   **Extensible Definitions**: Easy to add new parameters and maps in `src/ecu_definition.py`.
+*   **Modern GUI**: Built with PySide6 (Qt) for a professional look and feel.
+*   **Live Dashboard**: Real-time gauges for RPM, TPS, and Temperature.
+*   **Map Tracing**: Visualizes the active cell in the fuel map while the engine is running.
+*   **Data Logging**: Records ECU parameters to CSV for analysis.
+*   **Extensible**: Easy to define new protocols and maps in Python.
 
 ## Installation
 
@@ -19,22 +20,21 @@ This project is a modern ECU tuning tool inspired by **RomRaider**, designed to 
 
 ## Usage
 
-To run the simulation (Mock Mode):
+Run the application:
 
 ```bash
 python main.py
 ```
 
-This will start a live dashboard in your terminal, simulating an engine running and showing the active cell in the Fuel Map.
-
-## Configuration
-
-*   **Edit `src/ecu_definition.py`** to define your specific ECU's protocol, parameters, and maps.
-*   **Edit `main.py`** to change the serial port (e.g., `COM3` or `/dev/ttyUSB0`) when connecting to a real bike.
+### Quick Start Guide
+1.  Click **Connect** in the toolbar (simulates connection in Mock mode).
+2.  Click **Start Logging** to begin the data stream.
+3.  Switch to the **Dashboard** tab to see live gauges.
+4.  Switch to the **Map Editor** tab to see the "Map Tracing" in action (blue highlight moves as RPM/TPS change).
 
 ## Project Structure
 
+*   `src/gui/`: UI components (Dashboard, Map Editor, Main Window).
 *   `src/logger.py`: Core logging engine.
-*   `src/map_tracer.py`: Logic for map cell highlighting.
-*   `src/ecu_definition.py`: Definitions for ECU parameters and tables.
-*   `main.py`: Entry point and CLI dashboard.
+*   `src/ecu_definition.py`: ECU parameter and map definitions.
+*   `main.py`: Application entry point.
