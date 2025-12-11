@@ -17,7 +17,8 @@ from PySide6.QtGui import (
     QPixmap, QPainterPath
 )
 
-from src.maps.types import ECUInfo, ConnectionStatus, EngineType
+from src.maps.types import ECUInfo, EngineType
+from src.ecu.connection import ConnectionStatus
 from src.utils.logger import get_gui_logger
 
 
