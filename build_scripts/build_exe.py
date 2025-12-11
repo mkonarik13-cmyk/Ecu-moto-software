@@ -106,9 +106,9 @@ a = Analysis(
         'PySide6.QtWidgets',
         'matplotlib.backends.backend_qt5agg',
         'numpy',
-        'pycryptodome',
+        'Crypto',
         'colorlog',
-        'retrying'
+        'tenacity'
     ],
     hookspath=[],
     hooksconfig={{}},
