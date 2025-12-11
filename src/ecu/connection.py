@@ -287,6 +287,24 @@ class ECUConnection:
             self.logger.error(f"Failed to get ECU info: {e}")
             return None
 
+    def read_live_data(self) -> Dict[str, Any]:
+        """
+        Read live data parameters from ECU
+        
+        Returns:
+            Dictionary with parameter names and values
+        """
+        if not self.is_connected() or not self.protocol:
+            return {}
+            
+        try:
+            if hasattr(self.protocol, 'read_live_data'):
+                return self.protocol.read_live_data()
+            return {}
+        except Exception as e:
+            self.logger.error(f"Failed to read live data: {e}")
+            return {}
+
     def send_raw_command(self, command: bytes) -> Optional[bytes]:
         """
         Send raw command to ECU (for advanced use)

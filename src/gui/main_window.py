@@ -462,6 +462,7 @@ class MainWindow(QMainWindow):
 
         # Update all tabs with ECU info
         if self.dashboard_tab:
+            self.dashboard_tab.set_ecu_connection(self.ecu_connection)
             self.dashboard_tab.set_ecu_info(ecu_info)
         if self.flash_tools_tab:
             self.flash_tools_tab.set_ecu_connection(self.ecu_connection)
@@ -479,6 +480,7 @@ class MainWindow(QMainWindow):
 
         # Update all tabs
         if self.dashboard_tab:
+            self.dashboard_tab.set_ecu_connection(None)
             self.dashboard_tab.set_ecu_info(None)
         if self.flash_tools_tab:
             self.flash_tools_tab.set_ecu_connection(None)

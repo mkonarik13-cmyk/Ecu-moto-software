@@ -520,6 +520,40 @@ class KWP2000Protocol:
             self.logger.error(f"Connection test failed: {e}")
             return False
 
+    def read_live_data(self) -> Dict[str, Any]:
+        """
+        Read live data parameters (RPM, Temp, etc.)
+        
+        Returns:
+            Dictionary with parameter names and values
+        """
+        try:
+            # TODO: These are example Local IDs.
+            # Real IDs for 28M4G need to be verified (often 0x01, 0x02, etc.)
+            # or read via memory address if PIDs are not standard.
+            
+            live_data = {}
+            
+            # Example: Read RPM (assuming Local ID 0x10 returns 2 bytes)
+            # response = self._send_kwp_frame(KWP2000Service.READ_DATA_BY_LOCAL_ID.value, bytes([0x10]))
+            # if response:
+            #     raw_rpm = struct.unpack(">H", response)[0]
+            #     live_data['rpm'] = raw_rpm * 50  # Example scaling
+            
+            # Example: Read Coolant Temp (assuming Local ID 0x11 returns 1 byte)
+            # response = self._send_kwp_frame(KWP2000Service.READ_DATA_BY_LOCAL_ID.value, bytes([0x11]))
+            # if response:
+            #     raw_temp = response[0]
+            #     live_data['temperature'] = raw_temp - 40  # Example scaling
+            
+            # For now, return empty dict as we don't have real IDs
+            # The dashboard will handle missing keys by keeping previous values or showing defaults
+            return live_data
+
+        except Exception as e:
+            self.logger.error(f"Read live data failed: {e}")
+            return {}
+
     def close_session(self):
         """Close the diagnostic session"""
         if self.session_active:

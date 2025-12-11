@@ -605,6 +605,37 @@ class UDSProtocol:
             self.logger.error(f"UDS connection test failed: {e}")
             return False
 
+    def read_live_data(self) -> Dict[str, Any]:
+        """
+        Read live data parameters (RPM, Temp, etc.)
+        
+        Returns:
+            Dictionary with parameter names and values
+        """
+        try:
+            # TODO: These are example Data Identifiers (DIDs).
+            # Real DIDs for 28M4G need to be verified.
+            
+            live_data = {}
+            
+            # Example: Read Engine Speed (DID 0xF40C)
+            # response = self._send_uds_frame(UDSService.READ_DATA_BY_IDENTIFIER.value, b'\xF4\x0C')
+            # if response:
+            #     raw_rpm = struct.unpack(">H", response)[0]
+            #     live_data['rpm'] = raw_rpm / 4  # Example scaling
+            
+            # Example: Read Coolant Temp (DID 0xF405)
+            # response = self._send_uds_frame(UDSService.READ_DATA_BY_IDENTIFIER.value, b'\xF4\x05')
+            # if response:
+            #     raw_temp = response[0]
+            #     live_data['temperature'] = raw_temp - 40
+            
+            return live_data
+
+        except Exception as e:
+            self.logger.error(f"Read live data failed: {e}")
+            return {}
+
     def close_session(self):
         """Close the UDS diagnostic session"""
         if self.session_active:

@@ -232,8 +232,9 @@ class DashboardWidget(QWidget):
         super().__init__()
         self.logger = get_gui_logger()
         self.ecu_info: Optional[ECUInfo] = None
+        self.ecu_connection = None
         self.simulation_timer = QTimer()
-        self.simulation_timer.timeout.connect(self.update_simulation)
+        self.simulation_timer.timeout.connect(self.update_data)
 
         self.setup_ui()
         self.setup_style()
@@ -498,6 +499,10 @@ class DashboardWidget(QWidget):
             # Apply basic styling without CSS
             pass
 
+    def set_ecu_connection(self, connection):
+        """Set ECU connection object"""
+        self.ecu_connection = connection
+
     def set_ecu_info(self, ecu_info: Optional[ECUInfo]):
         """Update ECU information display"""
         self.ecu_info = ecu_info
@@ -586,12 +591,58 @@ class DashboardWidget(QWidget):
             self.fan_status_label.setText("Unknown")
             self.dtc_count_label.setText("0")
 
-    def update_simulation(self):
-        """Update simulated dashboard data (for demo purposes)"""
+    def update_data(self):
+        """Update dashboard data (real or simulated)"""
         import random
 
-        # Simulate RPM changes
-        if self.ecu_info:
+        if not self.ecu_info:
+            return
+
+        # Try to get real data if connected
+        real_data = {}
+        if self.ecu_connection and self.ecu_connection.is_connected():
+            real_data = self.ecu_connection.read_live_data()
+
+        if real_data:
+            # Use real data
+            if 'rpm' in real_data:
+                self.tachometer.set_rpm(real_data['rpm'])
+            
+            if 'temperature' in real_data:
+                new_temp = real_data['temperature']
+                self.temperature_gauge.set_temperature(new_temp)
+                
+                # Update fan status based on real temperature
+                if new_temp > 95:
+                    self.fan_status_label.setText("ON")
+                    self.fan_status_label.setStyleSheet("color: #4caf50; font-weight: bold;")
+                elif new_temp > 85:
+                    self.fan_status_label.setText("Intermittent")
+                    self.fan_status_label.setStyleSheet("color: #ff9800; font-weight: bold;")
+                else:
+                    self.fan_status_label.setText("OFF")
+                    self.fan_status_label.setStyleSheet("color: #2196f3;")
+
+            if 'voltage' in real_data:
+                voltage = real_data['voltage']
+                self.voltage_label.setText(f"{voltage:.1f} V")
+                if voltage < 12.0:
+                    self.voltage_label.setStyleSheet("color: #f44336;")
+                elif voltage < 12.3:
+                    self.voltage_label.setStyleSheet("color: #ff9800;")
+                else:
+                    self.voltage_label.setStyleSheet("color: #4caf50;")
+
+            # Update connection quality from real connection
+            quality_data = self.ecu_connection.test_connection_quality()
+            quality = int(quality_data.get('quality', 0))
+            self.quality_progress.setValue(quality)
+            self.quality_label.setText(f"{quality}%")
+            
+        else:
+            # Fallback to simulation if no real data (but still connected)
+            # This keeps the UI alive if data reading fails temporarily
+            
             # Different RPM ranges based on engine type
             if self.ecu_info.engine_type == EngineType.CC125:
                 max_rpm = 12000
@@ -642,15 +693,9 @@ class DashboardWidget(QWidget):
             quality = random.randint(75, 100)
             self.quality_progress.setValue(quality)
             self.quality_label.setText(f"{quality}%")
-            if quality >= 90:
-                self.quality_label.setStyleSheet("color: #4caf50;")
-            elif quality >= 70:
-                self.quality_label.setStyleSheet("color: #ff9800;")
-            else:
-                self.quality_label.setStyleSheet("color: #f44336;")
 
-            # Update last update time
-            self.last_update_label.setText(time.strftime("%H:%M:%S"))
+        # Update last update time
+        self.last_update_label.setText(time.strftime("%H:%M:%S"))
 
     def reset_gauges(self):
         """Reset all gauges to default values"""
