@@ -16,15 +16,58 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer, Signal, QThread
 from PySide6.QtGui import QAction, QIcon, QPalette, QColor
 
-# Import custom modules
-from src.gui.dashboard import DashboardWidget
-from src.gui.flash_tools import FlashToolsWidget
-from src.gui.map_editor import MapEditorWidget
-from src.gui.fan_settings import FanSettingsWidget
-from src.gui.widgets.connection_dialog import ConnectionDialog
-from src.ecu.connection import ECUConnection, ConnectionStatus
-from src.maps.types import ECUInfo, ConnectionConfig
-from src.utils.logger import get_gui_logger
+# Import custom modules with error handling
+try:
+    from src.gui.dashboard import DashboardWidget
+except ImportError as e:
+    print(f"Warning: Cannot import DashboardWidget: {e}")
+    DashboardWidget = None
+
+try:
+    from src.gui.flash_tools import FlashToolsWidget
+except ImportError as e:
+    print(f"Warning: Cannot import FlashToolsWidget: {e}")
+    FlashToolsWidget = None
+
+try:
+    from src.gui.map_editor import MapEditorWidget
+except ImportError as e:
+    print(f"Warning: Cannot import MapEditorWidget: {e}")
+    MapEditorWidget = None
+
+try:
+    from src.gui.fan_settings import FanSettingsWidget
+except ImportError as e:
+    print(f"Warning: Cannot import FanSettingsWidget: {e}")
+    FanSettingsWidget = None
+
+try:
+    from src.gui.widgets.connection_dialog import ConnectionDialog
+except ImportError as e:
+    print(f"Warning: Cannot import ConnectionDialog: {e}")
+    ConnectionDialog = None
+
+try:
+    from src.ecu.connection import ECUConnection, ConnectionStatus
+except ImportError as e:
+    print(f"Warning: Cannot import ECUConnection: {e}")
+    ECUConnection = None
+    ConnectionStatus = None
+
+try:
+    from src.maps.types import ECUInfo, ConnectionConfig
+except ImportError as e:
+    print(f"Warning: Cannot import types: {e}")
+    ECUInfo = None
+    ConnectionConfig = None
+
+try:
+    from src.utils.logger import get_gui_logger
+except ImportError as e:
+    print(f"Warning: Cannot import logger: {e}")
+    def get_gui_logger():
+        import logging
+        return logging.getLogger(__name__)
 
 
 class MainWindow(QMainWindow):

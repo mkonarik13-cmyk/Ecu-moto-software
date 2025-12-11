@@ -371,7 +371,8 @@ class MapEditorWidget(QWidget):
 
     def setup_style(self):
         """Setup widget styling"""
-        self.setStyleSheet("""
+        try:
+            self.setStyleSheet("""
             QTabWidget::pane {
                 border: 1px solid #555;
                 background-color: #2d2d2d;
@@ -444,6 +445,10 @@ class MapEditorWidget(QWidget):
                 width: 2px;
             }
         """)
+        except Exception as e:
+            self.logger.error(f"Failed to apply map editor styling: {e}")
+            # Apply basic styling without CSS
+            pass
 
     def set_ecu_connection(self, ecu_connection: Optional[ECUConnection]):
         """Set ECU connection reference"""

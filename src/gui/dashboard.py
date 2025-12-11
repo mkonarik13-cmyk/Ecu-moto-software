@@ -9,7 +9,7 @@ import time
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QGroupBox,
     QLabel, QPushButton, QFrame, QProgressBar, QScrollArea,
-    QGridLayout, QGraphicsOpacityEffect
+    QGridLayout, QGraphicsOpacityEffect, QComboBox
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import (
@@ -401,55 +401,60 @@ class DashboardWidget(QWidget):
 
     def setup_style(self):
         """Setup widget styling"""
-        self.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                border: 2px solid #555;
-                border-radius: 5px;
-                margin: 3px;
-                padding-top: 10px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-            }
-            QLabel {
-                color: #ddd;
-            }
-            QPushButton {
-                background-color: #404040;
-                border: 1px solid #555;
-                padding: 8px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #505050;
-            }
-            QPushButton:pressed {
-                background-color: #303030;
-            }
-            QPushButton:disabled {
-                background-color: #2a2a2a;
-                color: #666;
-            }
-            QComboBox {
-                background-color: #404040;
-                border: 1px solid #555;
-                padding: 5px;
-                border-radius: 4px;
-            }
-            QProgressBar {
-                border: 1px solid #555;
-                border-radius: 4px;
-                text-align: center;
-            }
-            QProgressBar::chunk {
-                background-color: #0078d4;
-                border-radius: 3px;
-            }
-        """)
+        try:
+            self.setStyleSheet("""
+                QGroupBox {
+                    font-weight: bold;
+                    border: 2px solid #555;
+                    border-radius: 5px;
+                    margin: 3px;
+                    padding-top: 10px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px 0 5px;
+                }
+                QLabel {
+                    color: #ddd;
+                }
+                QPushButton {
+                    background-color: #404040;
+                    border: 1px solid #555;
+                    padding: 8px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #505050;
+                }
+                QPushButton:pressed {
+                    background-color: #303030;
+                }
+                QPushButton:disabled {
+                    background-color: #2a2a2a;
+                    color: #666;
+                }
+                QComboBox {
+                    background-color: #404040;
+                    border: 1px solid #555;
+                    padding: 5px;
+                    border-radius: 4px;
+                }
+                QProgressBar {
+                    border: 1px solid #555;
+                    border-radius: 4px;
+                    text-align: center;
+                }
+                QProgressBar::chunk {
+                    background-color: #0078d4;
+                    border-radius: 3px;
+                }
+            """)
+        except Exception as e:
+            self.logger.error(f"Failed to apply dashboard styling: {e}")
+            # Apply basic styling without CSS
+            pass
 
     def set_ecu_info(self, ecu_info: Optional[ECUInfo]):
         """Update ECU information display"""

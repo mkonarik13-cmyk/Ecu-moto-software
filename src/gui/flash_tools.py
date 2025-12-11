@@ -444,7 +444,8 @@ class FlashToolsWidget(QWidget):
 
     def setup_style(self):
         """Setup widget styling"""
-        self.setStyleSheet("""
+        try:
+            self.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #555;
@@ -504,6 +505,10 @@ class FlashToolsWidget(QWidget):
                 color: #ddd;
             }
         """)
+        except Exception as e:
+            self.logger.error(f"Failed to apply flash tools styling: {e}")
+            # Apply basic styling without CSS
+            pass
 
     def set_ecu_connection(self, ecu_connection: Optional[ECUConnection]):
         """Set ECU connection reference"""

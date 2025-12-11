@@ -377,81 +377,91 @@ class FanSettingsWidget(QWidget):
 
     def setup_style(self):
         """Setup widget styling"""
-        self.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                border: 2px solid #555;
-                border-radius: 5px;
-                margin: 3px;
-                padding-top: 10px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-            }
-            QLabel {
-                color: #ddd;
-            }
-            QPushButton {
-                background-color: #404040;
-                border: 1px solid #555;
-                padding: 8px;
-                border-radius: 4px;
-                font-weight: bold;
-                color: #ddd;
-            }
-            QPushButton:hover {
-                background-color: #505050;
-            }
-            QPushButton:pressed {
-                background-color: #303030;
-            }
-            QPushButton:disabled {
-                background-color: #2a2a2a;
-                color: #666;
-            }
-            QSlider::groove:horizontal {
-                border: 1px solid #555;
-                height: 8px;
-                background: #404040;
-                border-radius: 4px;
-            }
-            QSlider::handle:horizontal {
-                background: #0078d4;
-                border: 1px solid #555;
-                width: 18px;
-                margin: -5px 0;
-                border-radius: 9px;
-            }
-            QCheckBox {
-                color: #ddd;
-            }
-            QComboBox {
-                background-color: #404040;
-                border: 1px solid #555;
-                padding: 5px;
-                border-radius: 4px;
-                color: #ddd;
-            }
-            QSpinBox {
-                background-color: #404040;
-                border: 1px solid #555;
-                padding: 5px;
-                border-radius: 4px;
-                color: #ddd;
-            }
-            QProgressBar {
-                border: 1px solid #555;
-                border-radius: 4px;
-                text-align: center;
-                color: #ddd;
-            }
-            QProgressBar::chunk {
-                background-color: #0078d4;
-                border-radius: 3px;
-            }
-        """)
+        try:
+            self.setStyleSheet("""
+                QGroupBox {
+                    font-weight: bold;
+                    border: 2px solid #555;
+                    border-radius: 5px;
+                    margin: 3px;
+                    padding-top: 10px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px 0 5px;
+                }
+                QLabel {
+                    color: #ddd;
+                }
+                QPushButton {
+                    background-color: #404040;
+                    border: 1px solid #555;
+                    padding: 8px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    color: #ddd;
+                }
+                QPushButton:hover {
+                    background-color: #505050;
+                }
+                QPushButton:pressed {
+                    background-color: #303030;
+                }
+                QPushButton:disabled {
+                    background-color: #2a2a2a;
+                    color: #666;
+                }
+                QSlider::groove:horizontal {
+                    border: 1px solid #555;
+                    height: 8px;
+                    background: #404040;
+                    border-radius: 4px;
+                }
+                QSlider::handle:horizontal {
+                    background: #0078d4;
+                    border: 1px solid #555;
+                    width: 18px;
+                    margin: -5px 0;
+                    border-radius: 9px;
+                }
+                QCheckBox {
+                    color: #ddd;
+                }
+                QComboBox {
+                    background-color: #404040;
+                    border: 1px solid #555;
+                    padding: 5px;
+                    border-radius: 4px;
+                    color: #ddd;
+                }
+                QSpinBox {
+                    background-color: #404040;
+                    border: 1px solid #555;
+                    padding: 5px;
+                    border-radius: 4px;
+                    color: #ddd;
+                }
+                QProgressBar {
+                    border: 1px solid #555;
+                    border-radius: 4px;
+                    text-align: center;
+                    color: #ddd;
+                }
+                QProgressBar::chunk {
+                    background-color: #0078d4;
+                    border-radius: 3px;
+                }
+            """)
+        except Exception as e:
+            self.logger.error(f"Failed to set style: {e}")
+            # Fallback - minimal styling
+            self.setStyleSheet("""
+                QWidget {
+                    background-color: #2d2d2d;
+                    color: #ddd;
+                }
+            """)
 
     def set_ecu_connection(self, ecu_connection: Optional[ECUConnection]):
         """Set ECU connection reference"""
