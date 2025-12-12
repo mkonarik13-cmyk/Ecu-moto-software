@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
 from PySide6.QtCore import Qt, QThread, Signal
 
 class ScanThread(QThread):
+    # Define signals properly for PySide6
     progress = Signal(int)
     finished = Signal(list)
 
