@@ -1,0 +1,28 @@
+# GUI Framework - Latest versions for Python 3.14
+PySide6>=6.7.0
+
+# Serial Communication - K-Line adapter support
+pyserial>=3.5
+
+# Data Processing - Latest versions compatible with Python 3.14
+numpy>=1.26.0
+matplotlib>=3.8.0
+
+# Security and Cryptography
+pycryptodome>=3.20.0
+
+# Build and Distribution Tools
+PyInstaller>=6.0
+wheel>=0.43.0
+
+# Development and Debugging (not included in build)
+pytest>=8.0.0
+pytest-qt>=4.2.0
+black>=24.0.0
+flake8>=7.0.0
+
+# Optional: Logging enhancements
+colorlog>=6.8.0
+
+# Optional: Enhanced error reporting
+tenacity>=8.4.0  # Modern replacement for retrying
